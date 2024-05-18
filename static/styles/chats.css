@@ -1,0 +1,217 @@
+#chatCon {
+    width: 1000px;
+    height: 700px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+    flex: 1 4;
+}
+
+#chatCon .chats,
+#chatCon .currentChat {
+    width: 25%;
+    height: 100%;
+    overflow: hidden;
+}
+
+/*Chat options*/
+
+#chatCon .chats {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    border: 2px solid rgb(0, 0, 0);
+    border-top-left-radius: 15px;
+    border-bottom-left-radius: 15px;
+}
+
+#chatCon .chats .chatter {
+    width: 100%;
+    height: 60px;
+    cursor: pointer;
+    padding-top: 10px;
+}
+
+#chatCon .chats .chatter.selected {
+    background-color: rgba(0, 225, 0, 0.5);
+}
+
+#chatCon .chats .chatter div {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+#chatCon .chats div img {
+    width: 50px;
+    margin-left: 15px;
+}
+
+#chatCon .chats div p {
+    font-size: 1rem;
+    margin-left: 15px;
+}
+
+#chatCon .chats hr {
+    width: 90%;
+}
+
+/*Current Chat*/
+
+#chatCon .currentChat {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    border: 2px solid rgb(0, 0, 0);
+    border-left: 0px;
+    border-top-right-radius: 15px;
+    border-bottom-right-radius: 15px;
+}
+
+#chatCon .infoBar {
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid black;
+}
+
+#chatCon .infoBar img {
+    width: 50px;
+    margin-left: 15px;
+}
+
+#chatCon .infoBar p {
+    font-size: 1rem;
+    margin-left: 15px;
+}
+
+#chatCon .infoBar {
+    width: 100%;
+    height: 10%;
+}
+
+#chatCon .chatView {
+    width: 100%;
+    height: 80%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    scroll-behavior: smooth;
+}
+
+#chatCon .chatView .loadMoreCon {
+    text-align: center;
+}
+
+#chatCon .chatView button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+#chatCon .chatView button:hover {
+    color: var(--accent-color);
+}
+
+#chatCon .writeChat {
+    width: 100%;
+    height: 10%;
+}
+
+#chatCon .chatView div {
+    background-color: var(--light-color);
+    padding: 10px;
+}
+
+#chatCon .chatView div .topMessage {
+    display: flex;
+    justify-content: space-between;
+    padding: 0%;
+    background-color: transparent;
+}
+
+#chatCon .chatView div .topMessage {
+    display: flex;
+    justify-content: space-between;
+    padding: 0%;
+    background-color: transparent;
+}
+
+#chatCon .chatView div .topMessage .time {
+    opacity: 0.7;
+}
+
+#chatCon .chatView div.you {
+    background-color: rgba(0, 225, 0, 0.2);
+}
+
+#chatCon .chatView div.server {
+    background-color: rgba(234, 255, 0, 0.2);
+}
+
+#chatCon .writeChat {
+    border: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#chatCon .writeChat input {
+    width: 80%;
+    height: 50%;
+    border: 0px solid black;
+    border-radius: 15px;
+    padding: 10px;
+    -moz-box-shadow: 3px 3px 5px 6px var(--box-shadow-color);
+    -webkit-box-shadow: 3px 3px 5px 6px var(--box-shadow-color);
+    box-shadow: 3px 3px 5px 2px var(--box-shadow-color);
+    resize: none;
+    font-size: 1.1rem;
+    outline: 0;
+}
+
+#reviewPopup {
+    position: absolute;
+    right: 50%;
+    top: 50%;
+    transform: translate(50%, -50%);
+    width: 425px;
+    height: 175px;
+    border: 2px solid black;
+    background-color: var(--light-color);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+#reviewPopup .title {
+    margin-top: 10px;
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+
+#reviewPopup .starCon {
+    display: flex;
+    gap: 5px;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+#reviewPopup .starCon img {
+    width: 30px;
+    cursor: pointer;
+}
+
+#reviewPopup .buttonCon {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    justify-content: center;
+}
+
+#reviewPopup button {
+    padding-top: 1%;
+    padding-bottom: 1%;
+    margin-bottom: 10px;
+}

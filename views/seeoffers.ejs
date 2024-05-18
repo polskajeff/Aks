@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <%- include('includes/head.ejs') %>
+        <link rel="stylesheet" href="/styles/seeoffers.css" />
+    </head>
+    <body>
+        <%- include('includes/navbar.ejs') %>
+        <div id="heading">
+            <p class="h1">
+                Your Offers
+                <span class="past" onclick="window.open('/orders','_self')"
+                    >(Go to orders)</span
+                ><span class="past delete" onclick="deleteOrder('<%=orderid%>')"
+                    >(Delete this order)</span
+                >
+            </p>
+            <button onclick="location.reload();">
+                <img
+                    src="https://cdn-icons-png.flaticon.com/512/61/61225.png"
+                />
+            </button>
+        </div>
+        <div id="helpers">
+            <% if(offers.length > 0) { %> <% offers.forEach(offer => { %>
+            <div class="helper" id="<%=offer.id%>">
+                <p class="username" style="display: none">
+                    <%=offer.offererName%>
+                </p>
+                <p class="offerid" style="display: none"><%=offer.offerid%></p>
+                <div class="top">
+                    <img
+                        class="profile"
+                        src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                    />
+                    <div>
+                        <p class="name"><%=offer.offererName.toUpperCase()%></p>
+
+                        <p class="reviews">
+                            (<%=offer.offererReviews%> reviews)<span
+                                class="review"
+                                >⭐<%=offer.stars%></span
+                            >
+                        </p>
+                    </div>
+                </div>
+                <div class="skills">
+                    <p class="title">Skills</p>
+                    <p class="list"><%=offer.offererSkills%></p>
+                </div>
+                <hr />
+                <div class="underbar">
+                    <p>Total orders</p>
+                    <p class="num"><%=offer.offererTotalOrders%></p>
+                </div>
+                <br />
+                <div class="underbar">
+                    <p>Offered price</p>
+                    <p class="num">$<%=offer.amount%></p>
+                </div>
+                <div class="options">
+                    <button
+                        class="common-button alt"
+                        onclick="Decline('<%=offer.id%>', '<%=offer.orderid%>', '<%=offer.id%>')"
+                    >
+                        Decline
+                    </button>
+                    <button
+                        class="common-button"
+                        onclick="Accept('<%=offer.orderid%>', '<%=offer.offererid%>', '<%=offer.amount%>')"
+                    >
+                        Accept
+                    </button>
+                </div>
+            </div>
+            <% }); }else {%>
+            <div id="heading">
+                <p class="h2">You have no offers.</p>
+            </div>
+            <% }; %>
+        </div>
+        <script>
+            async function Decline(offerid, orderid, divid) {
+                fetch('declineOffer', {
+                    method: 'POST',
+                    headers: { 'Content-type': 'application/json' },
+                    body: JSON.stringify({ offerid, orderid }),
+                });
+                location.reload();
+            }
+            async function Accept(orderid, helperid, amount) {
+                // await fetch('acceptOffer', {
+                //     method: 'POST',
+                //     headers: { 'Content-type': 'application/json' },
+                //     body: JSON.stringify({ orderid, helperid, amount }),
+                // });
+                window.open(
+                    `/offer/offers/acceptOffer?orderid=${orderid}&helperid=${helperid}&amount=${amount}`,
+                    '_self'
+                );
+            }
+
+            function deleteOrder(orderid) {
+                if (
+                    confirm(
+                        'Are you sure you want to delete this order? You cannot undo this.'
+                    )
+                ) {
+                    window.open(`/orders/deleteOrder/${orderid}`, '_self');
+                }
+            }
+        </script>
+    </body>
+</html>

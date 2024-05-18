@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <%- include('includes/head.ejs') %>
+        <link rel="stylesheet" href="/styles/chats.css" />
+        <script src="https://cdn.socket.io/socket.io-3.0.0.js"></script>
+    </head>
+    <% if(chatters.length > 0) { %>
+    <body>
+        <%- include('includes/navbar.ejs') %>
+        <%
+            convertTime = function(dateString)
+            {
+                let date = new Date(dateString);
+                let offset = date.getTimezoneOffset();
+                let adjustedDate = new Date(date.getTime() + offset); //taking away the multiplier of 60000 works
+                let options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+                let formattedDate = adjustedDate.toLocaleString('en-US', options);
+                return(formattedDate);
+                
+            }
+        %>
+        <div id="chatCon">
+            <div class="chats">
+                <% chatters.forEach(chatter => {%>
+                <div onclick="window.open('/chat?user=<%=chatter._id.toString()%>', '_self')"
+                    class="chatter <%if(currentChatter._id.toString() == chatter._id.toString()){%>selected<%}%>"
+                >
+                    <div>
+                        <img
+                            src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                        />
+                        <p><%=chatter.username%></p>
+                    </div>
+                    <hr />
+                </div>
+                <% });%>
+            </div>
+            
+            <div class="currentChat">
+                <div class="infoBar">
+                    <img
+                        src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                    />
+                    <p><%=currentChatter.username%></p>
+                </div>
+                <div class="chatView" id="chatView">
+
+                    <% if(chats.length > 0) { %> 
+                        <% if(chats.length > 24) { %>
+                        <div class="loadMoreCon">
+                            <button onclick="loadMore()">Load more messages</button>   
+                        </div>
+                        <% } %>
+                    <% chats.forEach(chat => { %>
+                        <%if(chat.message.includes('/SERVER/CLIENTCOMPLETE/')){%>
+                            <div class='server'>
+                                <div class="topMessage">
+                                    <p class="name bold">SERVER</p>
+                                    <p class="time"><%=convertTime(chat.createdAt)%></p>
+                                </div>
+                                <p class="message">Order #<%=chat.message.replace("/SERVER/CLIENTCOMPLETE/", "")%> has been marked as complete. Thank you for using Homework Solutions.</p>
+                            </div>
+                        <%} else if (chat.message.includes('/SERVER/STARTORDER/')){ %>
+                            <div class='server'>
+                                <div class="topMessage">
+                                    <p class="name bold">SERVER</p>
+                                    <p class="time"><%=convertTime(chat.createdAt)%></p>
+                                </div>
+                                <p class="message">Your order has just started. You can talk to your helper here. This is Order #<%=chat.message.replace("/SERVER/STARTORDER/", "")%></p>
+                            </div>
+                        <%} else if (chat.message.includes('/SERVER/REVIEW/')){ %>
+                            <div class='server'>
+                                <div class="topMessage">
+                                    <p class="name bold">SERVER</p>
+                                    <p class="time"><%=convertTime(chat.createdAt)%></p>
+                                </div>
+                                <p class="message">Please click <a href="javascript:void(0)" onclick="openRating()">here</a> to leave a review for your helper.</p>
+                            </div>
+                        <%} else if (chat.message.includes('/SERVER/LEFTREVIEW/')){ %>
+                            <div class='server'>
+                                <div class="topMessage">
+                                    <p class="name bold">SERVER</p>
+                                    <p class="time"><%=convertTime(chat.createdAt)%></p>
+                                </div>
+                                <p class="message">Thank you for leaving a review for your helper.</p>
+                            </div>
+                        <%} else if (chat.message.includes('/SERVER/CANCELCOMPLETE/')){ %>
+                            <div class='server'>
+                                <div class="topMessage">
+                                    <p class="name bold">SERVER</p>
+                                    <p class="time"><%=convertTime(chat.createdAt)%></p>
+                                </div>
+                                <p class="message">Order #<%=chat.message.replace("/SERVER/CANCELCOMPLETE/", "")%> has been marked as incomplete.</p>
+                            </div>
+                        <%} else if (chat.message.includes('/SERVER/HELPERCOMPLETE/')){ %>
+                            <div class='server'>
+                                <div class="topMessage">
+                                    <p class="name bold">SERVER</p>
+                                    <p class="time"><%=convertTime(chat.createdAt)%></p>
+                                </div>
+                                <p class="message">The helper marked Order #<%=chat.message.replace("/SERVER/HELPERCOMPLETE/", "")%> as complete. If you feel the order is not complete, click <a href='/orders/completeOrder/cancel/<%=chat.message.replace("/SERVER/HELPERCOMPLETE/", "")%>' style="color:red" >here</a> to cancel the request. After 48 hours of no response it will automatically be set to complete.</a></p>
+                            </div>
+                        <%} else if (chat.message.includes('/SERVER/')){ %>
+                        <div class='server'>
+                            <div class="topMessage">
+                                <p class="name bold">SERVER</p>
+                                <p class="time"><%=convertTime(chat.createdAt)%></p>
+                            </div>
+                            <p class="message">Files for Order #<%=chat.message.replace("/SERVER/", "")%> have been submited and are now downloadable <a href='/orders/downloadfiles/submitted/<%=chat.message.replace("/SERVER/", "")%>'>here.</a></p>
+                        </div>
+                        <%} else { %>
+                        <div <%if(chat.sender == 'You'){%>class='you'<%}%>>
+                            <div class="topMessage">
+                                <p class="name bold"><%=chat.sender%></p>
+                                <p class="time"><%=convertTime(chat.createdAt)%></p>
+                            </div>
+                            <p class="message"><%=chat.message%></p>
+                        </div>
+                    <% } }); } %>
+                </div>
+
+                <div class="writeChat">
+                    <input type="text"
+                    id="sendMessage"
+                    placeholder="Write a message..."
+                    ></textarea>
+                </div>
+                    
+            </div>
+        </div>
+
+        <div id="reviewPopup" style="display: none;">
+            <p class="title">Leave a review for <%=currentChatter.username%></p>
+            <div class="starCon" onmouseout="noStars()">
+                <img class="star" onmouseover="starHover(1)" onclick="starSelect(1)" src="/images/icons/emptystar.png">
+                <img class="star" onmouseover="starHover(2)" onclick="starSelect(2)" src="/images/icons/emptystar.png">
+                <img class="star" onmouseover="starHover(3)" onclick="starSelect(3)" src="/images/icons/emptystar.png">
+                <img class="star" onmouseover="starHover(4)" onclick="starSelect(4)" src="/images/icons/emptystar.png">
+                <img class="star" onmouseover="starHover(5)" onclick="starSelect(5)" src="/images/icons/emptystar.png">
+            </div>
+            <div class="buttonCon">
+                <button onclick="closeRating()" class="common-button alt">Cancel</button>
+                <button onclick="submitRating()" class="common-button">Submit</button>
+            </div>
+        </div>
+
+
+        <script>
+
+            function convertTime(dateString)
+            {
+                let date = new Date(dateString);
+                let offset = date.getTimezoneOffset();
+                let adjustedDate = new Date(date.getTime() + offset); //taking away the multiplier of 60000 works
+                let options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+                let formattedDate = adjustedDate.toLocaleString('en-US', options);
+                return(formattedDate);
+            }
+
+
+
+
+
+            let starSelected = false;
+            let trueRating = 0;
+
+            function closeRating()
+            {
+                document.getElementById("reviewPopup").style.display="none";
+            }
+
+            function submitRating()
+            {
+                closeRating();
+                fetch('/chat/review', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        helperid:'<%=currentChatter._id%>',
+                        rating: trueRating
+                    }),
+                    headers: {
+                        'Content-type': 'application/json; charset=UTF-8',
+                    }
+                }).then(res => {
+                    console.log(res);
+                    console.log("Now delete the option to leave a rating");
+                })
+            }
+
+            function openRating()
+            {
+                document.getElementById("reviewPopup").style.display="";
+            }
+
+            function starHover(rating)
+            {
+                for(let i = 0; i<rating; i++)
+                {
+                    document.getElementsByClassName("star")[i].setAttribute("src", "/images/icons/filledstar.png")
+                }
+                for(let i = 0; i<5-rating; i++)
+                {
+                    document.getElementsByClassName("star")[4-i].setAttribute("src", "/images/icons/emptystar.png")
+                }
+            }
+
+            function starSelect(rating)
+            {
+                trueRating = rating;
+                starSelected = true;
+                for(let i = 0; i<rating; i++)
+                {
+                    document.getElementsByClassName("star")[i].setAttribute("src", "/images/icons/filledstar.png")
+                }
+                for(let i = 0; i<5-rating; i++)
+                {
+                    document.getElementsByClassName("star")[4-i].setAttribute("src", "/images/icons/emptystar.png")
+                }
+            }
+
+            function noStars()
+            {
+                if(!starSelected)
+                {
+                    for(let i = 0; i<5; i++)
+                    {
+                        document.getElementsByClassName("star")[i].setAttribute("src", "/images/icons/emptystar.png")
+                    }
+                }
+                else
+                {
+                    for(let i = 0; i<trueRating; i++)
+                    {
+                        document.getElementsByClassName("star")[i].setAttribute("src", "/images/icons/filledstar.png")
+                    }
+                    for(let i = 0; i<5-trueRating; i++)
+                    {
+                        document.getElementsByClassName("star")[4-i].setAttribute("src", "/images/icons/emptystar.png")
+                    }
+                }
+            }
+
+
+
+
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+
+            let chatterid = '<%=currentChatter._id.toString()%>';
+            let userid = '<%=userid%>';
+            if(chatterid.localeCompare(userid) >= 1)
+            {
+                var roomid = chatterid+userid;
+            }
+            else
+            {
+                var roomid = userid+chatterid;
+            }
+
+            var sendMessage = document.getElementById('sendMessage'); // Here your text input element
+            sendMessage.addEventListener('keyup', function (event) {
+                if (event.keyCode === 13 && !event.shiftKey) {
+                    // 13 is the number of Enter key on keyboard
+                    if(sendMessage.value != '')
+                    {
+
+                        //append message to html
+                        appendMessage(true, sendMessage.value);
+
+                        //send webhook
+                        console.log("Made");
+                        socket.emit('send-message', roomid, sendMessage.value);
+                        //update db
+                        fetch('/chat/send', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            recipient:'<%=currentChatter._id%>',
+                            message: sendMessage.value
+                        }),
+                        headers: {
+                            'Content-type': 'application/json; charset=UTF-8',
+                        }
+                        });
+                        event.preventDefault();
+                        sendMessage.value = '';
+                    }
+                }
+            });
+
+            function appendMessage(youSent, message)
+            {   
+                
+                const chatsEl = document.getElementById('chatView');
+                if(message.includes('/SERVER/CLIENTCOMPLETE/'))
+                {
+                    message = message.replace("/SERVER/CLIENTCOMPLETE/", "")
+                    chatsEl.innerHTML += `
+                    <div class='server'>
+                        <div class="topMessage">
+                            <p class="name bold">SERVER</p>
+                            <p class="time">${convertTime(new Date(Date.now()))}</p>
+                        </div>
+                        <p class="message">Order #${message} has been marked as complete. Thank you for using Homework Solutions.</p>
+                    </div>
+                    `
+                }
+                else if(message.includes('/SERVER/STARTORDER/'))
+                {
+                    message = message.replace("/SERVER/STARTORDER/", "")
+                    chatsEl.innerHTML += `
+                    <div class='server'>
+                        <div class="topMessage">
+                            <p class="name bold">SERVER</p>
+                            <p class="time">${convertTime(new Date(Date.now()))}</p>
+                        </div>
+                        <p class="message">Your order has just started. You can talk to your helper here. This is Order #${message}</p>
+                    </div>
+                    `
+                }
+                else if(message.includes('/SERVER/REVIEW/'))
+                {
+                    chatsEl.innerHTML += `
+                    <div class='server'>
+                        <div class="topMessage">
+                            <p class="name bold">SERVER</p>
+                            <p class="time">${convertTime(new Date(Date.now()))}</p>
+                        </div>
+                        <p class="message">Please click <a href="javascript:void(0)" onclick="openRating()">here</a> to leave a review for your helper.</p>
+                    </div>
+                    `
+                }
+                else if(message.includes('/SERVER/LEFTREVIEW/'))
+                {
+                    chatsEl.innerHTML += `
+                    <div class='server'>
+                        <div class="topMessage">
+                            <p class="name bold">SERVER</p>
+                            <p class="time">${convertTime(new Date(Date.now()))}</p>
+                        </div>
+                        <p class="message">Thank you for leaving a review for your helper.</p>
+                    </div>
+                    `
+                }
+                else if(message.includes('/SERVER/CANCELCOMPLETE/'))
+                {
+                    message = message.replace("/SERVER/CANCELCOMPLETE/", "")
+                    chatsEl.innerHTML += `
+                    <div class='server'>
+                        <div class="topMessage">
+                            <p class="name bold">SERVER</p>
+                            <p class="time">${convertTime(new Date(Date.now()))}</p>
+                        </div>
+                        <p class="message">Order #${message} has been marked as incomplete.</p>
+                    </div>
+                    `
+                }
+                else if(message.includes('/SERVER/HELPERCOMPLETE/'))
+                {
+                    message = message.replace("/SERVER/HELPERCOMPLETE/", "")
+                    chatsEl.innerHTML += `
+                    <div class='server'>
+                        <div class="topMessage">
+                            <p class="name bold">SERVER</p>
+                            <p class="time">${convertTime(new Date(Date.now()))}</p>
+                        </div>
+                        <p class="message">The helper marked Order #${message} as complete. If you feel the order is not complete, click <a href='/orders/completeOrder/cancel/${message}' style="color:red" >here</a> to cancel the request. After 48 hours of no response it will automatically be set to complete.</p>
+                    </div>
+                    `
+                }
+                else if(message.includes('/SERVER/'))
+                {
+                    message = message.replace("/SERVER/", "")
+                    chatsEl.innerHTML += `
+                    <div class='server'>
+                        <div class="topMessage">
+                            <p class="name bold">SERVER</p>
+                            <p class="time">${convertTime(new Date(Date.now()))}</p>
+                        </div>
+                        <p class="message">Files for Order #${message} have been submited and are now downloadable <a href='/orders/downloadfiles/submitted/${message}'>here.</a></p>
+                    </div>
+                    `
+                }   
+                else if(youSent)
+                {
+                    chatsEl.innerHTML += `
+                    <div class='you'>
+                        <div class="topMessage">
+                            <p class="name bold">You</p>
+                            <p class="time">${convertTime(new Date(Date.now()))}</p>
+                        </div>
+                        <p class="message">${sendMessage.value}</p>
+                    </div>
+                    `
+                }
+                else
+                {
+                    chatsEl.innerHTML += `
+                    <div>
+                        <div class="topMessage">
+                            <p class="name bold"><%=currentChatter.username%></p>
+                            <p class="time">${convertTime(new Date(Date.now()))}</p>
+                        </div>
+                        <p class="message">${message}</p>
+                    </div>
+                    `
+                }
+                scrollToBottom();
+            }
+
+            
+
+            function loadMore()
+            {
+                let limit = 50;
+                if (urlParams.get('limitMessages')) {
+                    limit = parseInt(urlParams.get('limitMessages'));
+                    limit += 25;
+                }
+                window.open(`/chat?user=${urlParams.get('user')}&limitMessages=${limit}`, '_self');
+            }
+
+            function scrollToBottom()
+            {
+                if(!urlParams.get('limitMessages'))
+                {
+                    let chatCon = document.getElementById("chatView");
+                    chatCon.scrollTop = chatCon.scrollHeight;
+                }
+            }
+            scrollToBottom();
+
+            
+            const socket = io();
+            socket.io.on("error", (error) => {
+                console.log(error);
+            })
+            
+
+            socket.emit('join-room', roomid);
+
+            socket.on('message', text=> {
+                console.log(text);
+                appendMessage(false, text);
+            })
+        </script>
+    </body>
+    <% } else {%>
+        <body>
+        <%- include('includes/navbar.ejs') %>
+        <div id="chatCon">
+            <h1>You have no chats currently.</h1>
+        </div>
+    </body>
+    <% }%>
+</html>
